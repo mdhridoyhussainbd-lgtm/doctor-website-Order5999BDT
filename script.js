@@ -9,6 +9,9 @@
     orderId: ''
   };
 
+  // DOCTOR PHOTOS STATE
+  let selectedPhotos = [];
+
   function generateOrderId() {
     const d = new Date();
     const yy = String(d.getFullYear()).slice(-2);
@@ -26,6 +29,53 @@
     toast.textContent = message;
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 3200);
+  }
+
+  // Client-side image compression: max dimension 1600px, JPEG quality ~0.82
+  function processImageFile(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.onload = () => {
+          const MAX_DIM = 1600;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > MAX_DIM || height > MAX_DIM) {
+            if (width > height) {
+              height = Math.round((height * MAX_DIM) / width);
+              width = MAX_DIM;
+            } else {
+              width = Math.round((width * MAX_DIM) / height);
+              height = MAX_DIM;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const mimeType = 'image/jpeg';
+          const dataUrl = canvas.toDataURL(mimeType, 0.82);
+          const base64Data = dataUrl.split(',')[1] || '';
+          const cleanName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
+
+          resolve({
+            fileName: cleanName,
+            mimeType: mimeType,
+            base64: base64Data,
+            previewUrl: dataUrl
+          });
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
   }
 
   // Google Sheets submission via no-cors POST request
@@ -181,6 +231,127 @@
     });
   }
 
+  // DOCTOR PHOTOS UPLOAD HANDLERS
+  const photoDropzone = $('#photoDropzone');
+  const photoInput = $('#photoInput');
+  const photoPreviewGrid = $('#photoPreviewGrid');
+  const photoCountText = $('#photoCountText');
+  const photoStatusBadge = $('#photoStatusBadge');
+
+  if(photoDropzone && photoInput) {
+    photoDropzone.addEventListener('click', () => photoInput.click());
+
+    photoDropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      photoDropzone.classList.add('dragover');
+    });
+
+    ['dragleave', 'dragend', 'drop'].forEach(evt => {
+      photoDropzone.addEventListener(evt, () => photoDropzone.classList.remove('dragover'));
+    });
+
+    photoDropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      if(e.dataTransfer && e.dataTransfer.files) {
+        handlePhotoFiles(Array.from(e.dataTransfer.files));
+      }
+    });
+
+    photoInput.addEventListener('change', (e) => {
+      if(e.target.files) {
+        handlePhotoFiles(Array.from(e.target.files));
+        photoInput.value = '';
+      }
+    });
+  }
+
+  async function handlePhotoFiles(files) {
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const imageFiles = files.filter(f => validTypes.includes(f.type.toLowerCase()));
+
+    if(imageFiles.length === 0) {
+      showToast('Please select valid photos (JPG, JPEG, PNG, WEBP).');
+      return;
+    }
+
+    if(selectedPhotos.length + imageFiles.length > 10) {
+      showToast('Maximum 10 photos allowed in total.');
+      return;
+    }
+
+    showToast('Processing photo previews…');
+
+    for (const file of imageFiles) {
+      if (selectedPhotos.length >= 10) break;
+      try {
+        const processed = await processImageFile(file);
+        selectedPhotos.push({
+          id: Math.random().toString(36).substring(2, 9),
+          file: file,
+          name: file.name,
+          processedData: processed
+        });
+      } catch (err) {
+        console.warn('Error processing photo:', file.name, err);
+      }
+    }
+
+    renderPhotoPreviews();
+  }
+
+  function removePhoto(id) {
+    selectedPhotos = selectedPhotos.filter(p => p.id !== id);
+    renderPhotoPreviews();
+  }
+
+  function renderPhotoPreviews() {
+    if(!photoPreviewGrid) return;
+    photoPreviewGrid.innerHTML = '';
+
+    selectedPhotos.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'photo-preview-card';
+
+      const img = document.createElement('img');
+      img.src = p.processedData.previewUrl;
+      img.alt = p.name;
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'photo-remove-btn';
+      removeBtn.innerHTML = '×';
+      removeBtn.title = 'Remove photo';
+      removeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        removePhoto(p.id);
+      });
+
+      const fileNameTag = document.createElement('div');
+      fileNameTag.className = 'photo-file-name';
+      fileNameTag.textContent = p.name;
+
+      card.appendChild(img);
+      card.appendChild(removeBtn);
+      card.appendChild(fileNameTag);
+      photoPreviewGrid.appendChild(card);
+    });
+
+    const count = selectedPhotos.length;
+    if(photoCountText) {
+      photoCountText.textContent = `${count} of 10 photos selected (minimum 3 required)`;
+    }
+
+    if(photoStatusBadge) {
+      if(count >= 3 && count <= 10) {
+        photoStatusBadge.textContent = '✓ Ready';
+        photoStatusBadge.className = 'badge-valid';
+      } else {
+        photoStatusBadge.textContent = count < 3 ? 'Min 3 photos required' : 'Max 10 photos allowed';
+        photoStatusBadge.className = 'badge-invalid';
+      }
+    }
+  }
+
   // STEP 1: PAYMENT CONFIRMATION SUBMISSION
   if(paymentConfirmForm){
     paymentConfirmForm.addEventListener('submit', (e) => {
@@ -273,7 +444,7 @@
 
   // STEP 2: DOCTOR ORDER FORM SUBMISSION
   if(doctorOrderForm){
-    doctorOrderForm.addEventListener('submit', (event) => {
+    doctorOrderForm.addEventListener('submit', async (event) => {
       event.preventDefault();
 
       // Check Terms Checkbox
@@ -292,11 +463,28 @@
         return;
       }
 
+      // Check Photo Upload Requirements (Min 3, Max 10)
+      if (selectedPhotos.length < 3) {
+        showToast('Please upload at least 3 professional photos (3–10 required).');
+        document.querySelector('#photoDropzone')?.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+      if (selectedPhotos.length > 10) {
+        showToast('Please select no more than 10 photos.');
+        return;
+      }
+
       const doctorSubmitBtn = $('#doctorSubmitBtn');
+      const uploadProgressBox = $('#uploadProgressBox');
+      const uploadProgressText = $('#uploadProgressText');
+
       if(doctorSubmitBtn) {
         doctorSubmitBtn.disabled = true;
         doctorSubmitBtn.textContent = 'Submitting Order…';
       }
+
+      if(uploadProgressBox) uploadProgressBox.style.display = 'flex';
+      if(uploadProgressText) uploadProgressText.textContent = 'Submitting your order info…';
 
       const fd = new FormData(doctorOrderForm);
       const val = (name) => (fd.get(name) || '').toString().trim();
@@ -311,6 +499,7 @@
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if(!emailRegex.test(email)){
         showToast('Please enter a valid professional email address.');
+        if(uploadProgressBox) uploadProgressBox.style.display = 'none';
         if(doctorSubmitBtn) { doctorSubmitBtn.disabled = false; doctorSubmitBtn.textContent = 'Submit Website Order'; }
         return;
       }
@@ -318,10 +507,12 @@
       const phoneRegex = /^01[3-9]\d{8}$/;
       if(!phoneRegex.test(mobileNumber)){
         showToast('Please enter a valid 11-digit mobile number (e.g. 017XXXXXXXX).');
+        if(uploadProgressBox) uploadProgressBox.style.display = 'none';
         if(doctorSubmitBtn) { doctorSubmitBtn.disabled = false; doctorSubmitBtn.textContent = 'Submit Website Order'; }
         return;
       }
 
+      // Step 1 Payload: stage "doctor" with expectedImageCount
       const doctorPayload = {
         stage: "doctor",
         orderId: orderId,
@@ -357,17 +548,47 @@
         otherSocialUrl: val('otherSocial'),
         googleMapsUrl: val('map'),
         domainPreference: val('domain'),
-        notes: val('notes')
+        notes: val('notes'),
+        expectedImageCount: selectedPhotos.length
       };
 
-      // Submit Stage "doctor" to Google Sheets & LocalStorage
+      // Submit Stage "doctor" to Google Sheets & LocalStorage FIRST
       submitOrderData("doctor", doctorPayload);
+      await new Promise(resolve => setTimeout(resolve, 400));
+
+      // Step 2: Sequential Image Uploads (stage: "image")
+      for (let i = 0; i < selectedPhotos.length; i++) {
+        const photoObj = selectedPhotos[i];
+        if(uploadProgressText) {
+          uploadProgressText.textContent = `Uploading photo ${i + 1} of ${selectedPhotos.length}…`;
+        }
+
+        const imagePayload = {
+          stage: "image",
+          orderId: orderId,
+          doctorName: doctorName,
+          imageIndex: i + 1,
+          imageCount: selectedPhotos.length,
+          fileName: photoObj.processedData.fileName,
+          mimeType: photoObj.processedData.mimeType,
+          imageBase64: photoObj.processedData.base64
+        };
+
+        submitOrderData("image", imagePayload);
+        // Wait between image uploads for smooth sequential transmission
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
+      // Hide progress box & display completion status
+      if(uploadProgressBox) uploadProgressBox.style.display = 'none';
 
       // Display Success Card on Page
       const orderSuccessCard = $('#orderSuccessCard');
       const step2OrderIdDisplay = $('#step2OrderIdDisplay');
       if(step2OrderIdDisplay) step2OrderIdDisplay.textContent = orderId;
       if(orderSuccessCard) orderSuccessCard.style.display = 'block';
+
+      showToast('Your website order has been submitted successfully.');
 
       // Format WhatsApp Message
       const waTextLines = [
@@ -383,6 +604,7 @@
         `Mobile: ${mobileNumber}`,
         `Email: ${email}`,
         `Transaction ID: ${transactionId}`,
+        `Photos Uploaded: ${selectedPhotos.length}`,
         '',
         'Please confirm once my payment has been verified.',
         '',
@@ -391,7 +613,6 @@
 
       const url = `${waBase}?text=${encodeURIComponent(waTextLines.join('\n'))}`;
       window.open(url, '_blank', 'noopener');
-      showToast('Doctor information submitted successfully!');
 
       setTimeout(() => {
         if(doctorSubmitBtn) {

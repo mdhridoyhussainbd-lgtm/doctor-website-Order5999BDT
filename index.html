@@ -402,12 +402,39 @@
                 <textarea id="docNotes" name="notes" rows="3" placeholder="Any specific design preferences, secondary chamber info, or special requests..."></textarea>
               </label>
 
+              <!-- DOCTOR PHOTOS SECTION -->
+              <div class="form-section-title">Doctor Photos *</div>
+              <div class="photo-upload-container">
+                <p class="photo-upload-desc">Upload 3–10 clear professional photos. These images will be used when designing your website.</p>
+                
+                <div class="dropzone" id="photoDropzone">
+                  <input type="file" id="photoInput" multiple accept="image/jpeg,image/png,image/webp" style="display:none;" />
+                  <div class="dropzone-content">
+                    <span class="upload-icon">📸</span>
+                    <strong>Click to choose photos or drag & drop here</strong>
+                    <small>Supports JPG, JPEG, PNG, WEBP (Min 3, Max 10 photos)</small>
+                  </div>
+                </div>
+
+                <div class="photo-count-bar">
+                  <span id="photoCountText">0 of 10 photos selected (minimum 3 required)</span>
+                  <span id="photoStatusBadge" class="badge-invalid">Min 3 photos required</span>
+                </div>
+
+                <div class="photo-preview-grid" id="photoPreviewGrid"></div>
+              </div>
+
               <!-- MANDATORY TERMS CHECKBOX -->
               <div class="terms-row">
                 <input type="checkbox" id="termsCheckbox" required />
                 <label for="termsCheckbox" style="margin-bottom:0; font-weight:500;">
                   I have read and agree to the <span class="terms-link" id="openTermsModal">Terms & Conditions</span> and understand that this package is for a custom-coded static website, not WordPress, and does not include a WordPress/admin dashboard.
                 </label>
+              </div>
+
+              <div id="uploadProgressBox" class="upload-progress-box" style="display: none;">
+                <div class="upload-spinner"></div>
+                <span id="uploadProgressText">Submitting your order…</span>
               </div>
 
               <button type="submit" id="doctorSubmitBtn" class="btn btn-primary btn-large submit-btn">Submit Website Order</button>
