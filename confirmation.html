@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Order Received | Web Work Media</title>
+  <meta name="description" content="Your Web Work Media doctor website order has been received successfully." />
+  <meta name="theme-color" content="#da1d2c" />
+  <link rel="icon" href="assets/favicon.png" type="image/png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="config.js" defer></script>
+  <style>
+    :root {
+      --brand-red: #da1d2c;
+      --brand-red-dark: #b41421;
+      --brand-navy: #182c35;
+      --brand-text: #172d39;
+      --brand-muted: #66757d;
+      --brand-line: #e7ecef;
+      --brand-soft: #f6f8f9;
+      --success: #16834b;
+      --success-soft: #eefaf3;
+      --white: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Manrope", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--brand-text);
+      background: linear-gradient(180deg, #fbfcfc 0%, #f5f8f9 100%);
+      line-height: 1.55;
+    }
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+    button { font: inherit; }
+
+    .top-strip {
+      background: var(--brand-navy);
+      color: #fff;
+      font-size: 12px;
+    }
+    .top-strip-inner {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .site-header {
+      background: rgba(255,255,255,.96);
+      border-bottom: 1px solid var(--brand-line);
+      box-shadow: 0 4px 18px rgba(24,44,53,.04);
+    }
+    .nav-wrap {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+      height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .brand { width: 215px; }
+    .support-link {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--brand-navy);
+    }
+
+    .confirmation-section { padding: 70px 0 90px; }
+    .confirmation-wrap {
+      width: min(850px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+    .success-card {
+      background: #fff;
+      border: 1px solid var(--brand-line);
+      border-radius: 22px;
+      box-shadow: 0 24px 70px rgba(24,44,53,.10);
+      overflow: hidden;
+    }
+    .success-hero {
+      text-align: center;
+      padding: 46px 32px 34px;
+      background: radial-gradient(circle at 50% 0%, rgba(22,131,75,.12), transparent 55%), #fff;
+    }
+    .success-icon {
+      width: 76px;
+      height: 76px;
+      margin: 0 auto 20px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--success-soft);
+      color: var(--success);
+      border: 2px solid #bfe7cf;
+      font-size: 36px;
+      font-weight: 900;
+    }
+    .eyebrow {
+      font-size: 11px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      font-weight: 800;
+      color: var(--success);
+      margin-bottom: 9px;
+    }
+    h1 {
+      margin: 0;
+      color: var(--brand-navy);
+      font-size: clamp(31px, 5vw, 46px);
+      line-height: 1.08;
+      letter-spacing: -.035em;
+    }
+    .lead {
+      max-width: 650px;
+      margin: 15px auto 0;
+      color: var(--brand-muted);
+      font-size: 15px;
+    }
+
+    .content { padding: 0 32px 40px; }
+    .summary-card {
+      background: var(--brand-soft);
+      border: 1px solid var(--brand-line);
+      border-radius: 14px;
+      padding: 6px 20px;
+      margin: 0 auto 24px;
+      max-width: 690px;
+    }
+    .summary-row {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid #dde5e8;
+      align-items: center;
+    }
+    .summary-row:last-child { border-bottom: 0; }
+    .summary-label {
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--brand-muted);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .summary-value {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--brand-navy);
+      overflow-wrap: anywhere;
+    }
+    .order-value {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 16px;
+    }
+
+    .status-note {
+      max-width: 690px;
+      margin: 0 auto 26px;
+      border: 1px solid #cce7d6;
+      background: var(--success-soft);
+      border-radius: 12px;
+      padding: 17px 18px;
+      color: #24583b;
+      font-size: 13px;
+    }
+
+    .next-card {
+      max-width: 690px;
+      margin: 0 auto 28px;
+      border: 1px solid var(--brand-line);
+      border-radius: 14px;
+      padding: 24px;
+      background: #fff;
+    }
+    .next-card h2 {
+      margin: 0 0 16px;
+      font-size: 20px;
+      color: var(--brand-navy);
+    }
+    .steps {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 12px;
+    }
+    .steps li {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      font-size: 13px;
+      color: #465861;
+    }
+    .step-num {
+      flex: 0 0 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #fdf0f1;
+      color: var(--brand-red);
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .save-note {
+      text-align: center;
+      color: var(--brand-muted);
+      font-size: 12px;
+      margin: 0 0 18px;
+    }
+    .actions {
+      max-width: 690px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 9px;
+      padding: 14px 18px;
+      font-size: 13px;
+      font-weight: 800;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: .2s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-whatsapp {
+      grid-column: 1 / -1;
+      background: #18a957;
+      color: #fff;
+      font-size: 15px;
+      padding: 16px 20px;
+      box-shadow: 0 12px 26px rgba(24,169,87,.18);
+    }
+    .btn-copy { background: var(--brand-navy); color: #fff; }
+    .btn-back { background: #fff; color: var(--brand-navy); border-color: #d8e0e4; }
+    .mini-note {
+      text-align: center;
+      max-width: 690px;
+      margin: 16px auto 0;
+      font-size: 11px;
+      color: #87949a;
+    }
+
+    .footer {
+      padding: 24px 0;
+      border-top: 1px solid var(--brand-line);
+      background: #fff;
+      text-align: center;
+      color: var(--brand-muted);
+      font-size: 11px;
+    }
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 28px;
+      transform: translate(-50%, 20px);
+      background: var(--brand-navy);
+      color: #fff;
+      padding: 11px 17px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      opacity: 0;
+      pointer-events: none;
+      transition: .25s;
+      z-index: 50;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+    @media (max-width: 640px) {
+      .top-strip-inner { justify-content: center; text-align: center; }
+      .top-strip-inner span:last-child { display: none; }
+      .nav-wrap { height: 68px; }
+      .brand { width: 180px; }
+      .support-link { font-size: 11px; }
+      .confirmation-section { padding: 36px 0 58px; }
+      .success-hero { padding: 34px 20px 26px; }
+      .content { padding: 0 18px 30px; }
+      .summary-card { padding: 4px 14px; }
+      .summary-row { grid-template-columns: 1fr; gap: 5px; padding: 12px 0; }
+      .actions { grid-template-columns: 1fr; }
+      .btn-whatsapp { grid-column: auto; }
+      .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-strip">
+    <div class="top-strip-inner">
+      <span>Professional websites for doctors in Bangladesh</span>
+      <span>Web Work Media • Order Confirmation</span>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="nav-wrap">
+      <a class="brand" href="index.html" aria-label="Web Work Media home">
+        <img src="assets/brand-full.svg" alt="Web Work Media" />
+      </a>
+      <a class="support-link" id="supportWhatsapp" href="https://wa.me/8801302778420" target="_blank" rel="noopener">Need help? WhatsApp us</a>
+    </div>
+  </header>
+
+  <main class="confirmation-section">
+    <div class="confirmation-wrap">
+      <section class="success-card" aria-labelledby="confirmationTitle">
+        <div class="success-hero">
+          <div class="success-icon">✓</div>
+          <div class="eyebrow">ORDER RECEIVED SUCCESSFULLY</div>
+          <h1 id="confirmationTitle">Your Website Order Has Been Received</h1>
+          <p class="lead">Thank you. We have received your doctor information, payment details and uploaded photos.</p>
+        </div>
+
+        <div class="content">
+          <div class="summary-card" aria-label="Order summary">
+            <div class="summary-row">
+              <div class="summary-label">Order ID</div>
+              <div class="summary-value order-value" id="orderId">—</div>
+            </div>
+            <div class="summary-row">
+              <div class="summary-label">Doctor Name</div>
+              <div class="summary-value" id="doctorName">—</div>
+            </div>
+            <div class="summary-row">
+              <div class="summary-label">Transaction ID</div>
+              <div class="summary-value" id="transactionId">—</div>
+            </div>
+            <div class="summary-row">
+              <div class="summary-label">Photos Uploaded</div>
+              <div class="summary-value" id="photoCount">—</div>
+            </div>
+          </div>
+
+          <div class="status-note">
+            <strong>What happens now:</strong> Your payment will be manually verified by Web Work Media. Once verified, our team will begin your website project.
+          </div>
+
+          <div class="next-card">
+            <h2>What happens next?</h2>
+            <ol class="steps">
+              <li><span class="step-num">1</span><span>We verify your advance payment.</span></li>
+              <li><span class="step-num">2</span><span>We review your submitted information and photos.</span></li>
+              <li><span class="step-num">3</span><span>Website development begins.</span></li>
+              <li><span class="step-num">4</span><span>We contact you if any additional information is required.</span></li>
+              <li><span class="step-num">5</span><span>Your first website version is prepared for review.</span></li>
+            </ol>
+          </div>
+
+          <p class="save-note">Please save your Order ID for future reference.</p>
+
+          <div class="actions">
+            <a class="btn btn-whatsapp" id="whatsappBtn" href="#" target="_blank" rel="noopener">Confirm on WhatsApp</a>
+            <button class="btn btn-copy" id="copyOrderBtn" type="button">Copy Order ID</button>
+            <a class="btn btn-back" href="index.html">Back to Web Work Media</a>
+          </div>
+
+          <p class="mini-note">Your information has already been submitted. WhatsApp confirmation is optional but recommended if you want a quick acknowledgement from our team.</p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">© <span id="year"></span> Web Work Media. All rights reserved.</footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      const params = new URLSearchParams(window.location.search);
+      const orderId = (params.get('order') || '').trim();
+      const doctorName = (params.get('name') || '').trim();
+      const transactionId = (params.get('trx') || '').trim();
+      const photos = (params.get('photos') || '').trim();
+      const config = window.WWM_CONFIG || {};
+      const whatsappNumber = config.whatsappNumber || '8801302778420';
+
+      const safeText = (value) => value || '—';
+      document.getElementById('orderId').textContent = safeText(orderId);
+      document.getElementById('doctorName').textContent = safeText(doctorName);
+      document.getElementById('transactionId').textContent = safeText(transactionId);
+      document.getElementById('photoCount').textContent = photos ? photos + ' photo' + (photos === '1' ? '' : 's') : '—';
+      document.getElementById('year').textContent = new Date().getFullYear();
+
+      const waLines = [
+        'Hello Web Work Media,',
+        '',
+        'I have successfully submitted my Doctor Website Package order.',
+        '',
+        'Order ID: ' + safeText(orderId),
+        'Doctor Name: ' + safeText(doctorName),
+        'Transaction ID: ' + safeText(transactionId),
+        'Photos Uploaded: ' + safeText(photos),
+        '',
+        'Please confirm once my payment has been verified.',
+        '',
+        'Thank you.'
+      ];
+
+      document.getElementById('whatsappBtn').href = 'https://wa.me/' + whatsappNumber + '?text=' + encodeURIComponent(waLines.join('\n'));
+      document.getElementById('supportWhatsapp').href = 'https://wa.me/' + whatsappNumber;
+
+      const toast = document.getElementById('toast');
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2500);
+      }
+
+      document.getElementById('copyOrderBtn').addEventListener('click', async function () {
+        if (!orderId) {
+          showToast('Order ID is not available.');
+          return;
+        }
+
+        try {
+          await navigator.clipboard.writeText(orderId);
+          showToast('Order ID copied.');
+        } catch (error) {
+          showToast('Order ID: ' + orderId);
+        }
+      });
+    });
+  </script>
+</body>
+</html>

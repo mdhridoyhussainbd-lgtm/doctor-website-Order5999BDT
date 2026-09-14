@@ -582,47 +582,18 @@
         await new Promise(resolve => setTimeout(resolve, 100));
       }
 
-      // Hide progress box & display completion status
-      if(uploadProgressBox) uploadProgressBox.style.display = 'none';
+      // All order data and photos have been submitted.
+      // Redirect to a dedicated confirmation page instead of leaving the customer on the form.
+      if(uploadProgressText) uploadProgressText.textContent = 'Order received. Opening confirmation…';
 
-      // Display Success Card on Page
-      const orderSuccessCard = $('#orderSuccessCard');
-      const step2OrderIdDisplay = $('#step2OrderIdDisplay');
-      if(step2OrderIdDisplay) step2OrderIdDisplay.textContent = orderId;
-      if(orderSuccessCard) orderSuccessCard.style.display = 'block';
+      const confirmationParams = new URLSearchParams({
+        order: orderId,
+        name: doctorName,
+        trx: transactionId,
+        photos: String(selectedPhotos.length)
+      });
 
-      showToast('Your website order has been submitted successfully.');
-
-      // Format WhatsApp Message
-      const waTextLines = [
-        'Hello Web Work Media,',
-        '',
-        'I have submitted my Doctor Website Package order.',
-        '',
-        `Order ID: ${orderId}`,
-        `Package: Doctor Website – ${money(config.packagePrice || 5999)}`,
-        `Advance: ${money(config.advanceAmount || 3000)}`,
-        '',
-        `Doctor Name: ${doctorName}`,
-        `Mobile: ${mobileNumber}`,
-        `Email: ${email}`,
-        `Transaction ID: ${transactionId}`,
-        `Photos Uploaded: ${selectedPhotos.length}`,
-        '',
-        'Please confirm once my payment has been verified.',
-        '',
-        'Thank you.'
-      ];
-
-      const url = `${waBase}?text=${encodeURIComponent(waTextLines.join('\n'))}`;
-      window.open(url, '_blank', 'noopener');
-
-      setTimeout(() => {
-        if(doctorSubmitBtn) {
-          doctorSubmitBtn.disabled = false;
-          doctorSubmitBtn.textContent = 'Submit Website Order';
-        }
-      }, 3000);
+      window.location.href = `confirmation.html?${confirmationParams.toString()}`;
     });
   }
 
