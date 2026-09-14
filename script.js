@@ -28,22 +28,37 @@
     setTimeout(() => toast.classList.remove('show'), 3200);
   }
 
-  function submitOrderData(orderData) {
+  // Google Sheets submission via no-cors POST request
+  function sendToGoogleSheets(data) {
+    if (!config.apiEndpoint) return;
+    try {
+      fetch(config.apiEndpoint, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8"
+        },
+        body: JSON.stringify(data)
+      }).catch(err => {
+        console.warn("Google Sheets submission fetch error:", err);
+      });
+    } catch (err) {
+      console.warn("Google Sheets submission error:", err);
+    }
+  }
+
+  function submitOrderData(stage, data) {
+    // 1. LocalStorage backup
     try {
       const existing = JSON.parse(localStorage.getItem('wwm_orders') || '[]');
-      existing.push(orderData);
+      existing.push({ ...data, savedAt: new Date().toISOString() });
       localStorage.setItem('wwm_orders', JSON.stringify(existing));
     } catch (err) {
       console.warn('LocalStorage save error:', err);
     }
 
-    if (config.apiEndpoint) {
-      fetch(config.apiEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(orderData)
-      }).catch(err => console.error('API submission error:', err));
-    }
+    // 2. Google Sheets API call (non-blocking)
+    sendToGoogleSheets(data);
   }
 
   const phoneHref = `tel:+${config.supportPhoneE164 || '8801302778420'}`;
@@ -186,6 +201,7 @@
         return;
       }
 
+      // Do not generate a new Order ID if the same customer edits payment information
       if(!currentOrderId) {
         currentOrderId = generateOrderId();
       }
@@ -193,6 +209,14 @@
       paymentData.senderNumber = senderVal;
       paymentData.transactionId = trxVal;
       paymentData.orderId = currentOrderId;
+
+      // Submit Stage "payment" to Google Sheets & LocalStorage
+      submitOrderData("payment", {
+        stage: "payment",
+        orderId: currentOrderId,
+        bkashSenderNumber: senderVal,
+        transactionId: trxVal
+      });
 
       // Show Step 1 Banner & Order ID
       const step1SuccessCard = $('#step1SuccessCard');
@@ -298,15 +322,15 @@
         return;
       }
 
-      const orderData = {
+      const doctorPayload = {
+        stage: "doctor",
         orderId: orderId,
         customerName: doctorName,
+        doctorName: doctorName,
         mobileNumber: mobileNumber,
         professionalEmail: email,
         bkashSenderNumber: paymentData.senderNumber,
         transactionId: transactionId,
-        paymentSubmissionDateTime: new Date().toISOString(),
-        doctorName: doctorName,
         bmdcNumber: val('bmdc'),
         degrees: val('degrees'),
         speciality: val('speciality'),
@@ -333,12 +357,11 @@
         otherSocialUrl: val('otherSocial'),
         googleMapsUrl: val('map'),
         domainPreference: val('domain'),
-        notes: val('notes'),
-        termsAccepted: true
+        notes: val('notes')
       };
 
-      // Submit data to localStorage & API hook
-      submitOrderData(orderData);
+      // Submit Stage "doctor" to Google Sheets & LocalStorage
+      submitOrderData("doctor", doctorPayload);
 
       // Display Success Card on Page
       const orderSuccessCard = $('#orderSuccessCard');
@@ -346,7 +369,7 @@
       if(step2OrderIdDisplay) step2OrderIdDisplay.textContent = orderId;
       if(orderSuccessCard) orderSuccessCard.style.display = 'block';
 
-      // Format WhatsApp Message as strictly required by Item 11
+      // Format WhatsApp Message
       const waTextLines = [
         'Hello Web Work Media,',
         '',

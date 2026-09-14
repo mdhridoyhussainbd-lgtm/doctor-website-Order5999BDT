@@ -13,6 +13,5 @@ window.WWM_CONFIG = {
   includedDomain: ".com domain for 1 year",
   includedHosting: "1 year hosting",
   companyEmail: "info@webworkmedia.net",
-  // Optional backend endpoint for Google Sheets / Webhook submission
-  apiEndpoint: ""
+  apiEndpoint: "https://script.google.com/macros/s/AKfycbyKwtqv7kEIou0WPJ4nLu-hiCULhRHeiRMofJAGTxOjKcHOhSgkyrdvhqqKZ6ndpkxX/exec"
 };
