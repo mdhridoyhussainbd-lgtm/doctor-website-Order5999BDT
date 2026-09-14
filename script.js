@@ -78,11 +78,11 @@
     });
   }
 
-  // Google Sheets submission via no-cors POST request
+  // Google Sheets submission via no-cors POST request (returns fetch Promise for sequential awaiting)
   function sendToGoogleSheets(data) {
-    if (!config.apiEndpoint) return;
+    if (!config.apiEndpoint) return Promise.resolve();
     try {
-      fetch(config.apiEndpoint, {
+      return fetch(config.apiEndpoint, {
         method: "POST",
         mode: "no-cors",
         headers: {
@@ -94,21 +94,24 @@
       });
     } catch (err) {
       console.warn("Google Sheets submission error:", err);
+      return Promise.resolve();
     }
   }
 
   function submitOrderData(stage, data) {
-    // 1. LocalStorage backup
-    try {
-      const existing = JSON.parse(localStorage.getItem('wwm_orders') || '[]');
-      existing.push({ ...data, savedAt: new Date().toISOString() });
-      localStorage.setItem('wwm_orders', JSON.stringify(existing));
-    } catch (err) {
-      console.warn('LocalStorage save error:', err);
+    // 1. LocalStorage backup (Skip for stage === "image" to keep localStorage lightweight)
+    if (stage !== "image") {
+      try {
+        const existing = JSON.parse(localStorage.getItem('wwm_orders') || '[]');
+        existing.push({ ...data, savedAt: new Date().toISOString() });
+        localStorage.setItem('wwm_orders', JSON.stringify(existing));
+      } catch (err) {
+        console.warn('LocalStorage save error:', err);
+      }
     }
 
-    // 2. Google Sheets API call (non-blocking)
-    sendToGoogleSheets(data);
+    // 2. Google Sheets API call
+    return sendToGoogleSheets(data);
   }
 
   const phoneHref = `tel:+${config.supportPhoneE164 || '8801302778420'}`;
@@ -553,10 +556,9 @@
       };
 
       // Submit Stage "doctor" to Google Sheets & LocalStorage FIRST
-      submitOrderData("doctor", doctorPayload);
-      await new Promise(resolve => setTimeout(resolve, 400));
+      await submitOrderData("doctor", doctorPayload);
 
-      // Step 2: Sequential Image Uploads (stage: "image")
+      // Step 2: Truly Sequential Image Uploads (stage: "image")
       for (let i = 0; i < selectedPhotos.length; i++) {
         const photoObj = selectedPhotos[i];
         if(uploadProgressText) {
@@ -574,9 +576,10 @@
           imageBase64: photoObj.processedData.base64
         };
 
-        submitOrderData("image", imagePayload);
-        // Wait between image uploads for smooth sequential transmission
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Truly await each image upload request before initiating the next
+        await submitOrderData("image", imagePayload);
+        // Small 100ms pause between sequential requests for network stability
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
 
       // Hide progress box & display completion status
